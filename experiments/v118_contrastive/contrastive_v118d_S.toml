@@ -1,0 +1,48 @@
+# v118d-S: barrido de capacidad sobre v118c (VICReg + datos corregidos).
+# Única variable: tamaño del encoder. baseline 118/4 = 75.5M params entrenables
+# (hidden=1024, n_layers=6, ff_dim=2816, nhead=16, 79% en el Transformer).
+# S reduce a 14.8M (19.6% del baseline). Dropout bajado (0.45/0.4 -> 0.2/0.1):
+# un modelo 5x más chico con dropout de 0.45 underfitea por diseño; la
+# regularización ahora la da el tamaño, no el dropout. Ver report.md "Próximo paso".
+[experiment]
+name  = "contrastive_v118d_S"
+phase = "contrastive"
+seed  = 23
+
+[model]
+hidden_size       = 512
+nhead             = 8
+ff_dim            = 1024
+n_layers          = 3
+encoder_dropout   = 0.2
+multihead_dropout = 0.1
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+
+[loss]
+type             = "vicreg"
+proj_dim         = 256
+vicreg_lambda_inv = 25.0
+vicreg_mu_var     = 25.0
+vicreg_nu_cov     = 1.0
+
+[augmentation]
+temporal_crop_min = 0.7
+coord_noise_std   = 0.02
+
+[training]
+model_version           = 118
+run_id                  = 5          # checkpoints/TensorBoard en 118/5/
+epochs                  = 80
+batch_size              = 32
+learning_rate           = 3e-4
+weight_decay            = 0.05
+warmup_epochs           = 5
+max_frames              = 1024
+grad_checkpoint_encoder = true
+checkpoint_interval     = 10
+log_interval            = 1
+early_stopping_patience = 25

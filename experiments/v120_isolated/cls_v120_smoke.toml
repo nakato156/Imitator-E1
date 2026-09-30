@@ -1,0 +1,28 @@
+# Smoke test de cls_v120: subset chico, pocas épocas, verifica que el loop no
+# crashea y que loggea Acc/val_top1, Acc/val_top5 antes de lanzar el run completo.
+[experiment]
+name  = "cls_v120_smoke"
+phase = "cls"
+seed  = 23
+
+[model]
+gcn_channels = [16, 16, 16]
+hidden_size  = 32
+
+[data]
+h5_filename     = "dataset1_isolated.hdf5"
+dataset_name    = "dataset1"
+n_keypoints     = 111
+n_val_per_class = 1
+max_samples     = 60
+
+[training]
+model_version           = 120
+run_id                   = 0
+epochs                   = 3
+batch_size               = 8
+learning_rate            = 1e-3
+weight_decay             = 1e-4
+label_smoothing          = 0.1
+checkpoint_interval       = 1
+early_stopping_patience  = 100

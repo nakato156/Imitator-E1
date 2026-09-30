@@ -1,0 +1,38 @@
+# v119b — igual que v119 (arquitectura portada) + stream de movimiento
+# (diferencias frame-a-frame, CoSign/LiftSign §3.2.1). Min et al. Table 6/8:
+# fusionar skeleton+motion da una mejora adicional (WER 4.8%->4.6% Signer-
+# Independent) sobre el stream estático solo -- mejora menor que el resto de
+# la arquitectura, por eso se corre DESPUÉS de confirmar que v119 funciona.
+[experiment]
+name  = "ctc_v119b"
+phase = "ctc"
+seed  = 23
+
+[model]
+use_motion_stream = true
+gcn_channels       = [32, 64, 128]
+hidden_size        = 256
+lstm_layers        = 2
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+text_group       = "text_ctx"
+
+[loss]
+lambda_u = 0.1
+lambda_p = 0.1
+
+[training]
+model_version           = 119
+run_id                  = 2
+epochs                  = 40
+batch_size              = 16
+learning_rate           = 4e-4
+weight_decay            = 1e-4
+warmup_epochs           = 2
+lr_decay_epochs         = [20, 35]
+max_frames              = 1024
+checkpoint_interval     = 10
+early_stopping_patience = 25

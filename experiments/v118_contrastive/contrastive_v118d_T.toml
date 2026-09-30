@@ -1,0 +1,45 @@
+# v118d-T: barrido de capacidad sobre v118c (VICReg + datos corregidos).
+# T reduce a 7.5M params (9.9% del baseline 75.5M). Ver v118d_S.toml para contexto
+# completo del barrido y la justificación del dropout bajado.
+[experiment]
+name  = "contrastive_v118d_T"
+phase = "contrastive"
+seed  = 23
+
+[model]
+hidden_size       = 256
+nhead             = 4
+ff_dim            = 512
+n_layers          = 2
+encoder_dropout   = 0.2
+multihead_dropout = 0.1
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+
+[loss]
+type             = "vicreg"
+proj_dim         = 256
+vicreg_lambda_inv = 25.0
+vicreg_mu_var     = 25.0
+vicreg_nu_cov     = 1.0
+
+[augmentation]
+temporal_crop_min = 0.7
+coord_noise_std   = 0.02
+
+[training]
+model_version           = 118
+run_id                  = 6          # checkpoints/TensorBoard en 118/6/
+epochs                  = 80
+batch_size              = 32
+learning_rate           = 3e-4
+weight_decay            = 0.05
+warmup_epochs           = 5
+max_frames              = 1024
+grad_checkpoint_encoder = true
+checkpoint_interval     = 10
+log_interval            = 1
+early_stopping_patience = 25

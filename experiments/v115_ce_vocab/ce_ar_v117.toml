@@ -1,0 +1,45 @@
+# v117: CE-AR + InfoNCE (lambda=0.1, temp=0.07) + gen eval cada época + grad norm logging.
+[experiment]
+name  = "ce_ar_v117"
+phase = "ce_ar"
+seed  = 23
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+
+[diagnostics]
+enabled           = true
+eval_interval     = 1
+n_eval_batches    = 16
+compare_to_target = false
+per_dim_std_eps   = 0.01
+collapse_alert_effrank_ratio = 0.25
+
+[loss]
+type      = "ce_ar"
+llm_model = "unsloth/gemma-3n-E2B-it-unsloth-bnb-4bit"
+k_prefix  = 20
+
+[infonce]
+enabled     = true
+lambda      = 0.1
+temperature = 0.07
+
+[sigreg]
+enabled = false
+
+[training]
+model_version           = 117
+early_stopping_patience = 15
+compile                 = false
+epochs                  = 30
+batch_size              = 32
+sub_batch_size          = 1
+
+[eval]
+gen_interval        = 1
+max_new_tokens      = 50
+gen_val_batches     = 999
+shuffle_prefix_diag = true

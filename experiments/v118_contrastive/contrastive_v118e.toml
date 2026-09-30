@@ -1,0 +1,45 @@
+# v118e: igual que v118c (VICReg, datos sin truncar) pero con el lado texto
+# reemplazado: en vez de mean-pool de la tabla de embeddings de ENTRADA de Gemma
+# (anisotrópica -- diagnóstico mostró coseno medio entre frases distintas=0.80,
+# vecino más cercano mediana=0.90, effective_rank=123/2048), se usa el hidden
+# state contextual del ÚLTIMO token de la última capa (forward real, ve toda la
+# frase por causalidad). Grupo HDF5 nuevo `dataset2/text_ctx`, generado con
+# `scripts/data/build_dataset2_h5.py --phase text_ctx`. Mismo encoder de vídeo que
+# v118c (70M params) para comparación limpia: solo cambia el target de texto.
+# 20 épocas (no 80): validación rápida de si el cambio mueve el techo de R@1
+# antes de comprometer el presupuesto completo.
+[experiment]
+name  = "contrastive_v118e"
+phase = "contrastive"
+seed  = 23
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+text_group       = "text_ctx"
+
+[loss]
+type             = "vicreg"
+proj_dim         = 256
+vicreg_lambda_inv = 25.0
+vicreg_mu_var     = 25.0
+vicreg_nu_cov     = 1.0
+
+[augmentation]
+temporal_crop_min = 0.7
+coord_noise_std   = 0.02
+
+[training]
+model_version           = 118
+run_id                  = 7          # checkpoints/TensorBoard en 118/7/ (texto contextual)
+epochs                  = 20
+batch_size              = 32
+learning_rate           = 3e-4
+weight_decay            = 0.05
+warmup_epochs           = 5
+max_frames              = 1024
+grad_checkpoint_encoder = true
+checkpoint_interval     = 10
+log_interval            = 1
+early_stopping_patience = 25

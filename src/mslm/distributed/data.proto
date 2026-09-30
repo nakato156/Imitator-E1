@@ -1,0 +1,57 @@
+// data.proto
+syntax = "proto3";
+package data;
+
+service DataService {
+  rpc StreamData(StreamRequest) returns (stream StreamResponse);
+  rpc SaveModel(SaveModelRequest) returns (SaveModelResponse);
+  rpc GetHyperparams(Empty) returns (Hyperparams);
+  rpc GetModelParameters(Empty) returns (ModelParameters);
+}
+
+message StreamRequest {
+  int32 rank = 1;
+  int32 world_size = 2;
+  string split = 3;
+}
+
+message Tensor {
+  bytes  bytes = 1;
+  repeated  int32 shape = 2;
+  string dtype = 3;
+}
+
+message StreamResponse {
+  Tensor keypoint = 1;
+  Tensor keypoint_mask = 2;
+  Tensor embedding = 3;
+  Tensor embedding_mask = 4;
+}
+
+message SaveModelRequest {
+  bytes  model_bytes = 1;    // raw torch.save buffer
+  string model_name  = 2;    // e.g. "epoch10.pt"
+}
+
+message SaveModelResponse {
+  bool   success = 1;
+  string message = 2;
+}
+
+message Empty {
+}
+
+message Hyperparams {
+  double learning_rate = 1;
+  int32 model_version = 2;
+  int32 epochs = 3;
+  int32 batch_size = 4;
+}
+
+message ModelParameters {
+  int32 output_size = 1;
+  int32 hidden_size = 2;
+  int32 nhead = 3;
+  int32 ff_dim = 4;
+  int32 n_layers = 5;
+}

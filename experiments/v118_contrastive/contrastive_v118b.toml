@@ -1,0 +1,35 @@
+# v118b: mismo setup contrastivo que v118 pero con augmentaciones y batch mayor.
+# Motivación: v118 obtuvo R@1=2.5% (vs azar 0.8%) pero con overfitting severo
+# (train 1.5 vs val 6.5). Fix: augmentaciones de keypoints + batch=32 (31 negativos).
+[experiment]
+name  = "contrastive_v118b"
+phase = "contrastive"
+seed  = 23
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+
+[loss]
+type        = "contrastive"
+proj_dim    = 128            # reducido de 256 para mayor regularización
+temperature = 0.07
+
+[augmentation]
+temporal_crop_min = 0.7      # recorta a 70-100% de frames válidos (aleatoriamente)
+coord_noise_std   = 0.02     # ruido Gaussiano en coordenadas de keypoints
+
+[training]
+model_version           = 118
+run_id                  = 2          # checkpoints/TensorBoard en 118/2/
+epochs                  = 80
+batch_size              = 32         # 31 negativos in-batch (vs 15 en v118)
+learning_rate           = 3e-4
+weight_decay            = 0.05
+warmup_epochs           = 5
+max_frames              = 768
+grad_checkpoint_encoder = true
+checkpoint_interval     = 10
+log_interval            = 1
+early_stopping_patience = 25         # más paciencia con augmentations

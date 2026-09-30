@@ -1,0 +1,36 @@
+[experiment]
+name = "cls_v121_smoke"
+phase = "cls"
+seed = 23
+
+[model]
+gcn_channels = [8, 8, 8]
+hidden_size = 16
+norm_type = "group"
+norm_groups = 8
+temporal_head = false
+use_motion_stream = false
+dropout = 0.0
+
+[data]
+h5_filename = "dataset1_isolated.hdf5"
+dataset_name = "dataset1"
+n_keypoints = 111
+n_val_per_class = 1
+max_samples = 60
+normalization = "minmax"
+augmentation_profile = "legacy"
+trim_active = false
+downsample = 1
+
+[training]
+model_version = 121
+run_id = 0
+epochs = 2
+batch_size = 8
+learning_rate = 1e-3
+weight_decay = 1e-4
+label_smoothing = 0.1
+checkpoint_interval = 1
+early_stopping_patience = 100
+output_root = "../outputs"

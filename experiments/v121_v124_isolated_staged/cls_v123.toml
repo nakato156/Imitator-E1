@@ -1,0 +1,36 @@
+[experiment]
+name = "cls_v123_composed_augmentation"
+phase = "cls"
+seed = 23
+
+[model]
+gcn_channels = [32, 64, 128]
+hidden_size = 128
+norm_type = "group"
+norm_groups = 16
+temporal_head = false
+use_motion_stream = false
+dropout = 0.0
+
+[data]
+h5_filename = "dataset1_isolated_v122.hdf5"
+dataset_name = "dataset1"
+n_keypoints = 111
+n_val_per_class = 10
+normalization = "torso"
+augmentation_profile = "composed"
+trim_active = true
+target_frames = 64
+downsample = 1
+
+[training]
+model_version = 123
+run_id = 23
+epochs = 80
+batch_size = 16
+learning_rate = 1e-3
+weight_decay = 1e-4
+label_smoothing = 0.1
+checkpoint_interval = 10
+early_stopping_patience = 20
+output_root = "../outputs"

@@ -1,0 +1,48 @@
+# v115.1: CE-vocab con logits coseno + temperatura aprendible + best-checkpoint.
+# Corrige el runaway de confianza de v115 (mean_l2_norm 16→33, coseno→0.998).
+
+[experiment]
+name  = "ce_vocab_v115_1_study"
+phase = "ce_vocab"
+seed  = 23
+
+[data]
+primary_datasets   = ["dataset2"]
+secondary_datasets = ["dataset6"]
+excluded_datasets  = ["dataset4"]
+n_keypoints        = 111
+max_length         = 4000
+train_ratio        = 0.8
+data_augmentation  = false
+check_alignment       = true
+alignment_tolerance_s = 1.0
+
+[diagnostics]
+enabled           = true
+eval_interval     = 1
+n_eval_batches    = 16
+compare_to_target = true
+per_dim_std_eps   = 0.01
+collapse_alert_effrank_ratio = 0.25
+
+[sigreg]
+enabled            = false
+lambda             = 1.0
+n_slices           = 1024
+resample_slices    = true
+n_freqs            = 17
+freq_scale         = 1.0
+standardize        = true
+distributed_gather = true
+target             = "isotropic_gaussian"
+
+[loss]
+type             = "ce_vocab"
+embed_table_path = "../data/processed/gemma3n_embed_table.pt"
+learnable_temp   = true
+init_log_temp    = 2.659     # log(1/0.07), CLIP default → temp ≈ 14.3
+label_smoothing  = 0.1
+
+[training]
+model_version           = 1151
+early_stopping_patience = 15

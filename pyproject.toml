@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mslm"
+version = "0.2.0-dev"
+description = "Multi-Stage Learning Model for Sign Language"
+authors = [
+  { name = "Christian Velasquez" },
+  { name = "Giorgio Mancusi" },
+  { name = "Rody Vilchez" },
+]
+requires-python = ">=3.11.11"
+dependencies = [
+  "torch",
+  "numpy",
+  "tqdm",
+  "optuna",
+  "pandas",
+  "unsloth",
+  "h5py",
+  "nvtx",
+  "sacrebleu",
+]
+
+[project.optional-dependencies]
+dev = [
+  "poethepoet>=0.24.1"
+]
+
+[tool.poe.tasks]
+# Definimos cada tarea con su propio bloque para pasar PYTHONPATH
+[tool.poe.tasks.train]
+cmd = "python scripts/train/train.py --epochs 100 --batch_size 64 --batch_sample 4"
+env = { PYTHONPATH = "." }
+
+[tool.poe.tasks.train_temporal_v126]
+cmd = "python scripts/train/train_temporal_v126.py"
+env = { PYTHONPATH = "." }
+
+[tool.poe.tasks.train_isolated]
+cmd = "python scripts/train/train_isolated_staged.py"
+env = { PYTHONPATH = "." }
+
+[tool.poe.tasks.embed]
+cmd = "python src/data_proc/main.py"
+env = { PYTHONPATH = "." }

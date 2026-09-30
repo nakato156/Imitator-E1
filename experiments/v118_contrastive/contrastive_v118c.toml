@@ -1,0 +1,46 @@
+# v118c: mismo encoder que v118/v118b pero con pérdida VICReg en vez de InfoNCE.
+# Motivación: en v118 (R@1=2.5%) y v118b (R@1=1.7%, con augmentations) el val
+# loss diverge respecto al train loss (3.6x peor al final) porque logit_scale
+# (temperatura) crece sin freno y amplifica el error en pares incorrectos de val.
+# VICReg no usa temperatura ni negativos explícitos: invariancia alinea cada par,
+# y varianza+covarianza previenen el colapso por construcción. Mejor candidato
+# para lotes pequeños con pocos negativos (batch=16-32 sobre 481 clips).
+#
+# run_id=4: tras el bug encontrado en build_dataset2_h5.py (--max-frames 250 por
+# defecto truncaba el vídeo a mitad de la oración en 228/600 clips, ver memoria
+# v118-truncated-video-bug), se re-extrajeron esos 228 clips sin ese cap (hasta
+# 1400 frames). max_frames sube a 1024 (p99 real=900) para no volver a truncar.
+[experiment]
+name  = "contrastive_v118c"
+phase = "contrastive"
+seed  = 23
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+
+[loss]
+type             = "vicreg"
+proj_dim         = 256
+vicreg_lambda_inv = 25.0     # peso del término de invariancia (alineación vídeo-texto)
+vicreg_mu_var     = 25.0     # peso del término de varianza (anti-colapso)
+vicreg_nu_cov     = 1.0      # peso del término de covarianza (decorrelación de dims)
+
+[augmentation]
+temporal_crop_min = 0.7
+coord_noise_std   = 0.02
+
+[training]
+model_version           = 118
+run_id                  = 4          # checkpoints/TensorBoard en 118/4/ (datos corregidos: sin truncado a 250)
+epochs                  = 80
+batch_size              = 32
+learning_rate           = 3e-4
+weight_decay            = 0.05
+warmup_epochs           = 5
+max_frames              = 1024
+grad_checkpoint_encoder = true
+checkpoint_interval     = 10
+log_interval            = 1
+early_stopping_patience = 25

@@ -1,0 +1,44 @@
+# v119 — chequeo rápido en background sobre un subconjunto de 1000 clips
+# (no son literalmente "los 600 originales": se verificó que las claves
+# "0".."599" de dataset2 ya no corresponden a ese subconjunto documentado en
+# report.md -- v118f mezcló los 5000 clips nuevos bajo el mismo índice
+# secuencial sin preservar esa identidad. Se usa una muestra aleatoria
+# determinista de tamaño comparable en su lugar).
+#
+# Histórico: corrida diagnóstica que mostró colapso a blank con la PRIMERA
+# arquitectura de v119 (1 STGCNBlock+Transformer+1 cabeza, ver report.md).
+# Mantenido por trazabilidad; no se relanza con estos hiperparámetros viejos
+# salvo que se quiera reproducir ese diagnóstico específico.
+[experiment]
+name  = "ctc_v119_subset1k"
+phase = "ctc"
+seed  = 23
+
+[model]
+use_motion_stream = false
+gcn_channels       = [32, 64, 128]
+hidden_size        = 256
+lstm_layers        = 2
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+text_group       = "text_ctx"
+max_samples      = 1000
+
+[loss]
+lambda_u = 0.1
+lambda_p = 0.1
+
+[training]
+model_version           = 119
+run_id                  = 10
+epochs                  = 60
+batch_size              = 16
+learning_rate           = 3e-4
+weight_decay            = 0.05
+warmup_epochs           = 5
+max_frames              = 1024
+checkpoint_interval     = 10
+early_stopping_patience = 20

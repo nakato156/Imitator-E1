@@ -1,0 +1,44 @@
+# v116.0: soft-prefix CE autoregresiva con Gemma-3n E2B congelado.
+# El Imitator + PrefixAdapter producen K=20 tokens de prefijo que se inyectan
+# en Gemma congelado; se optimiza CE autoregresiva sobre los tokens del target.
+# Arquitectura: keypoints → PrefixImitator → prefix [B,K,2048] → Gemma (frozen) → CE-AR.
+
+[experiment]
+name  = "ce_ar_v116_study"
+phase = "ce_ar"
+seed  = 23
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+
+[diagnostics]
+enabled           = true
+eval_interval     = 1
+n_eval_batches    = 16
+compare_to_target = false
+per_dim_std_eps   = 0.01
+collapse_alert_effrank_ratio = 0.25
+
+[loss]
+type      = "ce_ar"
+llm_model = "unsloth/gemma-3n-E2B-it-unsloth-bnb-4bit"
+k_prefix  = 20
+
+[training]
+model_version           = 116
+early_stopping_patience = 15
+compile                 = false
+epochs                  = 30
+batch_size              = 32
+# RTX 4060 Ti (15.58 GB): batch_sample=1 is the max before STGCN [B,1536,T,111]
+# activations cause OOM during training. Val fix (@torch.no_grad) keeps
+# base memory at 9.32 GB, leaving 6.26 GB headroom for 1-sample activations.
+sub_batch_size          = 1
+
+[eval]
+# Greedy-decode from soft prefix + chrF every gen_interval epochs.
+gen_interval   = 5
+max_new_tokens = 50
+gen_val_batches = 4

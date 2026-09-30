@@ -1,0 +1,52 @@
+# v119 — CTC sobre secuencia, arquitectura PORTADA de Min et al. ("A Closer
+# Look at Skeleton-based CSLR", ICCVW 2025) / LiftSign (CVPRW 2026): GCN
+# multi-capa -> TCN (K3-P2-K3-P2, P2=TLP) -> BiLSTM -> clasificador compartido
+# con supervisión CTC dual (Y_s corto plazo + Y_l largo plazo).
+#
+# Reemplaza tanto el objetivo contrastivo de v118 (techo R@1≈2.5-2.9%, ver
+# outputs/diag_v118_train_val_gap.json) como la primera versión de v119 (1
+# STGCNBlock + Transformer + 1 sola cabeza), que colapsó a blank en 1000 y en
+# 5600 clips reales por igual (ver report.md) -- síntoma que Min et al.
+# atribuyen directamente a la falta de supervisión de corto plazo.
+#
+# Hiperparámetros de optimización (lr, wd, step-decay en 20/35, 40 épocas)
+# también portados literal de Min et al. §4.1, no inventados.
+[experiment]
+name  = "ctc_v119"
+phase = "ctc"
+seed  = 23
+
+[model]
+use_motion_stream = false
+gcn_channels       = [32, 64, 128]
+hidden_size        = 256
+lstm_layers        = 2
+
+[data]
+primary_datasets      = ["dataset2"]
+n_keypoints           = 111
+train_ratio           = 0.8
+text_group            = "text_ctx"
+# Palancas data-oriented (v119b): filtro de calidad + augmentation. Ver
+# report.md / "Less is More" (PUCP) -- generalizado a la restricción real de
+# nn.CTCLoss en esta arquitectura (frames//4 >= n_palabras del label).
+min_frames             = 16
+filter_invalid_labels  = true
+data_augmentation      = true
+
+[loss]
+lambda_u = 0.1
+lambda_p = 0.1
+
+[training]
+model_version           = 119
+run_id                  = 1
+epochs                  = 40
+batch_size              = 16
+learning_rate           = 4e-4
+weight_decay            = 1e-4
+warmup_epochs           = 2
+lr_decay_epochs         = [20, 35]
+max_frames              = 1024
+checkpoint_interval     = 10
+early_stopping_patience = 25

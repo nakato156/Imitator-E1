@@ -1,0 +1,10 @@
+[model]
+input_size = 111
+output_size= 2048
+hidden_size= 1024
+nhead= 16
+ff_dim= 2816
+n_layers= 6
+encoder_dropout = 0.45
+multihead_dropout = 0.4
+pool_dim = 256

@@ -1,0 +1,43 @@
+# v118f: igual que v118e (VICReg + text_ctx contextual) pero sobre el dataset2
+# ampliado a 5600 clips (600 originales + 5000 nuevos extraídos del mismo pipeline
+# RTMPose, mismo canal CN Sordos). El plateau de R@1≈2.5-2.9% en v118c/v118e se
+# sostuvo tras descartar overfitting y anisotropía de texto como causa -- el
+# sospechoso restante es cantidad de datos (481 clips de train para retrieval
+# sentence-level). Este run prueba si R@1 escala con N antes de tocar arquitectura.
+# Mismo encoder de vídeo (70M params), misma pérdida, mismos hiperparámetros que
+# v118e -- solo cambia el tamaño del dataset.
+[experiment]
+name  = "contrastive_v118f"
+phase = "contrastive"
+seed  = 23
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+text_group       = "text_ctx"
+
+[loss]
+type             = "vicreg"
+proj_dim         = 256
+vicreg_lambda_inv = 25.0
+vicreg_mu_var     = 25.0
+vicreg_nu_cov     = 1.0
+
+[augmentation]
+temporal_crop_min = 0.7
+coord_noise_std   = 0.02
+
+[training]
+model_version           = 118
+run_id                  = 8          # checkpoints/TensorBoard en 118/8/ (5600 clips)
+epochs                  = 20
+batch_size              = 32
+learning_rate           = 3e-4
+weight_decay            = 0.05
+warmup_epochs           = 5
+max_frames              = 1024
+grad_checkpoint_encoder = true
+checkpoint_interval     = 10
+log_interval            = 1
+early_stopping_patience = 25

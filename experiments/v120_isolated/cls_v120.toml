@@ -1,0 +1,29 @@
+# v120 — reconocimiento de señas aislado sobre dataset1 (64 glosas, 50
+# ejemplos c/u). Reemplaza la línea de traducción (v113-v119, dataset2) tras
+# verificar que dataset2 es 96% labels únicas sin glosas -- CTC no puede
+# alinearse con ~1 ejemplo por frase. Azar = 1/64 = 1.56%.
+[experiment]
+name  = "cls_v120"
+phase = "cls"
+seed  = 23
+
+[model]
+gcn_channels = [32, 64, 128]
+hidden_size  = 128
+
+[data]
+h5_filename     = "dataset1_isolated.hdf5"
+dataset_name    = "dataset1"
+n_keypoints     = 111
+n_val_per_class = 10
+
+[training]
+model_version           = 120
+run_id                   = 2
+epochs                   = 80
+batch_size               = 16
+learning_rate            = 1e-3
+weight_decay             = 1e-4
+label_smoothing          = 0.1
+checkpoint_interval      = 10
+early_stopping_patience  = 20

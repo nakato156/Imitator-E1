@@ -1,0 +1,48 @@
+# v116.1: igual que v116.0 + SIGReg para frenar el colapso del prefix.
+# v116.0 mostró effrank 25→4 en 30 épocas con alta cos-sim (0.98+) y
+# generación repetitiva. SIGReg empuja el prefix hacia una gaussiana
+# isotrópica para mantener diversidad sin tocar la CE-AR.
+
+[experiment]
+name  = "ce_ar_v116_1_sigreg"
+phase = "ce_ar"
+seed  = 23
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+
+[diagnostics]
+enabled           = true
+eval_interval     = 1
+n_eval_batches    = 16
+compare_to_target = false
+per_dim_std_eps   = 0.01
+collapse_alert_effrank_ratio = 0.25
+
+[loss]
+type      = "ce_ar"
+llm_model = "unsloth/gemma-3n-E2B-it-unsloth-bnb-4bit"
+k_prefix  = 20
+
+[sigreg]
+enabled        = true
+lambda         = 0.1
+n_slices       = 1024
+n_freqs        = 17
+standardize    = true
+resample_slices = true
+
+[training]
+model_version           = 1161
+early_stopping_patience = 15
+compile                 = false
+epochs                  = 25
+batch_size              = 32
+sub_batch_size          = 1
+
+[eval]
+gen_interval    = 5
+max_new_tokens  = 50
+gen_val_batches = 4

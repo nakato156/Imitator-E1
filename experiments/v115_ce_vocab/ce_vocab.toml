@@ -1,0 +1,48 @@
+# Experimento v115: CE sobre el vocabulario con cabeza atada (opción 1 post-diagnóstico).
+# Hipótesis: la regresión punto a punto (MSE+coseno) a embeddings continuos se minimiza en
+# la media condicional y colapsa (v113: effrank 25→1.8; v114 con SIGReg: →4.0). Clasificar
+# cada posición contra el vocabulario (logits = pred @ E^T, E = tabla de embeddings de
+# gemma-3n congelada) introduce repulsión vía softmax y elimina la solución degenerada.
+# Comparable con v113/v114: mismo modelo, mismos datos, mismas métricas de colapso.
+
+[experiment]
+name  = "ce_vocab_study"
+phase = "ce_vocab"
+seed  = 23
+
+[data]
+primary_datasets   = ["dataset2"]   # LSA, frases (principal)
+secondary_datasets = ["dataset6"]   # LSP, narraciones (transferencia, NO mezclar)
+excluded_datasets  = ["dataset4"]   # sólo análisis cualitativo
+n_keypoints        = 111
+max_length         = 4000
+train_ratio        = 0.8
+data_augmentation  = false
+check_alignment       = true
+alignment_tolerance_s = 1.0
+
+[diagnostics]
+enabled           = true
+eval_interval     = 1
+n_eval_batches    = 16
+compare_to_target = true
+per_dim_std_eps   = 0.01
+collapse_alert_effrank_ratio = 0.25
+
+[sigreg]                            # desactivado: aislar el efecto de la CE sola
+enabled            = false
+lambda             = 1.0
+n_slices           = 1024
+resample_slices    = true
+n_freqs            = 17
+freq_scale         = 1.0
+standardize        = true
+distributed_gather = true
+target             = "isotropic_gaussian"
+
+[loss]
+type             = "ce_vocab"
+# Tabla generada por scripts/data/add_token_ids_h5.py --phase table (fp16, vocab x 2048).
+# Ruta relativa al cwd de entrenamiento (Sign-chris); data/ vive en el directorio padre.
+embed_table_path = "../data/processed/gemma3n_embed_table.pt"
+logit_temp       = 1.0

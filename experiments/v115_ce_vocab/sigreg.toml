@@ -1,0 +1,43 @@
+# Experimento: diagnóstico de colapso de embeddings + SIGReg (LeJEPA)
+# Fase 1 (entrega actual): diagnóstico de colapso sobre la arquitectura actual.
+# Fase 2/3: SIGReg (sketching + Epps-Pulley) — claves presentes pero desactivadas.
+
+[experiment]
+name  = "sigreg_collapse_study"
+phase = "sigreg"            # diagnose | sigreg | verify
+seed  = 23
+
+[data]
+primary_datasets   = ["dataset2"]   # LSA, frases (principal)
+secondary_datasets = ["dataset6"]   # LSP, narraciones (transferencia, NO mezclar)
+excluded_datasets  = ["dataset4"]   # sólo análisis cualitativo
+n_keypoints        = 111
+max_length         = 4000
+train_ratio        = 0.8
+data_augmentation  = false
+check_alignment       = true        # QA EDA: 3088 clips desalineados >1s
+alignment_tolerance_s = 1.0
+
+[diagnostics]
+enabled           = true
+eval_interval     = 1               # cada N epochs
+n_eval_batches    = 16              # submuestra para estimar la covarianza
+compare_to_target = true            # comparar stats pred vs target LLM
+per_dim_std_eps   = 0.01            # umbral de colapso dimensional (std por dim)
+collapse_alert_effrank_ratio = 0.25 # alerta si effrank(pred)/effrank(target) < umbral
+
+[sigreg]                            # Fase 2 — anti-colapso (LeJEPA)
+enabled            = true
+lambda             = 1.0            # único hiperparámetro de compensación
+n_slices           = 1024          # direcciones de proyección aleatorias (sketching)
+resample_slices    = true          # nuevas direcciones cada paso
+n_freqs            = 17             # puntos de integración del test Epps-Pulley
+freq_scale         = 1.0           # dispersión de frecuencias de la función característica
+standardize        = true          # centrar/escalar embeddings antes del test
+distributed_gather = true          # agregar estadísticas entre GPUs (Accelerate)
+target             = "isotropic_gaussian"
+
+[loss]
+use_mse    = true
+use_cosine = true
+# total = prediction_loss + (sigreg.lambda * sigreg)  cuando sigreg.enabled

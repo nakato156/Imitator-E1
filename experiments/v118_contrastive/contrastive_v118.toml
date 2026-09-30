@@ -1,0 +1,30 @@
+# v118: pre-entrenamiento contrastivo del encoder (CLIP-style), SIN LLM.
+# Separa "codificar seña" de "generar texto". Métrica de selección = retrieval@1.
+# Motivación: v116/v117 (CE-AR soft-prefix) no aterrizaban la seña (retr@1=0%).
+[experiment]
+name  = "contrastive_v118"
+phase = "contrastive"
+seed  = 23
+
+[data]
+primary_datasets = ["dataset2"]
+n_keypoints      = 111
+train_ratio      = 0.8
+
+[loss]
+type        = "contrastive"
+proj_dim    = 256
+temperature = 0.07          # init de la temperatura aprendible (logit_scale = log(1/temp))
+
+[training]
+model_version           = 118
+epochs                  = 60
+batch_size              = 16          # negativos in-batch = 15
+learning_rate           = 3e-4
+weight_decay            = 0.05
+warmup_epochs           = 5
+max_frames              = 768         # recorta vídeos largos para acotar memoria del STGCN
+grad_checkpoint_encoder = true        # encodea vídeo muestra-a-muestra con checkpointing
+checkpoint_interval     = 10
+log_interval            = 1
+early_stopping_patience = 20          # sobre retrieval@1 (mayor = mejor)

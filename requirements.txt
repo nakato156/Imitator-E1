@@ -1,0 +1,17 @@
+poethepoet
+torch
+torchvision
+numpy
+openmim
+tensorboard
+nvtx
+h5py
+protobuf
+grpcio
+grpcio-tools
+optuna
+onnxruntime-gpu
+onnxscript
+accelerate
+transformers
+sacrebleu
