@@ -2,6 +2,20 @@
 
 Research code for a staged sign-language video-to-text approach. The current Imitator prototype maps keypoint sequences to Gemma token IDs; an optional Gemma stage can correct and format the generated text. This is an experimental research system, not a production translation service.
 
+## How the Imitator works
+
+<p align="center">
+  <img src="docs/imitator.gif" alt="Imitator pipeline: keypoint capture, ST-GCN and Transformer processing, cross-attention token queries, decoded transcription" width="960">
+</p>
+
+**Capture.** A signing clip is reduced to 111 keypoints per frame — 7 pose, 64 face, and 20 per hand — giving a `[B, T, 111, 2]` tensor of `(x, y)` coordinates.
+
+**Processing.** An ST-GCN block mixes information over the skeleton graph and over time, node features are pooled to one vector per frame, and a RoPE Transformer encoder builds frame-level context. A fixed set of 20 learned token queries then cross-attends over those frames, and a final linear projection maps each query into the Gemma embedding space.
+
+**Output.** Taking the argmax over the vocabulary gives one token ID per query, which the Gemma tokenizer decodes into text. A separate, optional pass with a frozen Gemma can correct punctuation and formatting; it is not part of the Imitator forward pass.
+
+The diagram illustrates the design in `src/mslm/models/imitator.py`; current runs go through the v126 temporal trainer (`scripts/train/train_temporal_v126.py`), which wraps that design in single-clip, teacher-forced mode. The skeleton motion, graph pulses, and attention weights in the animation are synthetic, but the token IDs and the transcription are a real prediction. Regenerate the GIF with `python scripts/docs/make_imitator_animation.py`.
+
 ## Repository layout
 
 - `src/mslm/`: models, data loaders, training components, and metrics.
