@@ -7,9 +7,9 @@ __pycache__/
 venv/
 .env
 .env.*
-data/
-outputs/
-logs/
+/data/
+/outputs/
+/logs/
 *.ckpt
 *.pt
 *.pth
