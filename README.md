@@ -86,4 +86,4 @@ python -m pytest tests/
 
 Copyright (c) 2026 Christian Velasquez, Giorgio Mancusi, and Rody Vilchez.
 
-Unless otherwise noted, project code and materials are licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/); see [LICENSE](LICENSE). Third-party software, datasets, and pretrained models retain their own terms.
+Unless otherwise noted, project code and materials are licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); see [LICENSE](LICENSE). Third-party software, datasets, and pretrained models retain their own terms.
