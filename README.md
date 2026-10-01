@@ -16,7 +16,9 @@ Research code for a staged sign-language video-to-text approach. The current Imi
 
 The diagram illustrates the design in `src/mslm/models/imitator.py`; current runs go through the v126 temporal trainer (`scripts/train/train_temporal_v126.py`), which wraps that design in single-clip, teacher-forced mode.
 
-The animation is a drawing of the architecture, not a recorded inference. The skeleton, the graph pulses, and the attention weights are procedural, and the keypoints shown are not the clip that produced the transcription. The token IDs and the text in the last scene are a real checkpoint output, but from the teacher-forced evaluation, where the CIF segmentation and the token count are taken from the target; free-running, that run reached 0.369 token top-1 and 7.4% exact sequence match. Regenerate the GIF with `python scripts/docs/make_imitator_animation.py`.
+Both ends of the animation are real data for the same clip (1660, gloss "Hambriento"): the first scene plays that clip's actual 111 keypoints, and the last scene shows the checkpoint's actual token IDs and decoded text for it. The middle scene is a diagram — its graph pulses and attention weights are drawn, not recorded. The prediction comes from the teacher-forced evaluation, where the CIF segmentation and the token count are taken from the target; free-running, that run reached 0.369 token top-1 and 7.4% exact sequence match.
+
+The keypoints ship as `docs/clip_keypoints.npz` (39 KB), exported by `scripts/docs/export_clip_keypoints.py`, so the GIF can be regenerated with `python scripts/docs/make_imitator_animation.py` without the dataset.
 
 ## Repository layout
 

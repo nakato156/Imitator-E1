@@ -3,18 +3,17 @@
 
 Three scenes: keypoint capture -> internal processing -> decoded output.
 
-The figure illustrates the design in src/mslm/models/imitator.py. The skeleton
-motion, the graph pulses and the attention weights are drawn, not recorded: the
-keypoints in scene 1 are procedural and are not the clip that produced the
-transcription. The token IDs and the text in scene 3 are a real checkpoint
-output, but from the teacher-forced evaluation, where the CIF alphas and the
-token count come from the target (train_temporal_v126.py:668-688). Free-running,
-that run scored pred_raw_top1=0.369 / pred_exact=0.074 against
-teacher_top1=0.901.
+Scene 1 plays the real keypoints of clip 1660 ("Hambriento") and scene 3 shows
+the checkpoint's real output for that same clip, so both ends of the figure are
+actual data. Scene 2 is a diagram: the graph pulses and the attention
+weights are drawn, not recorded. The prediction comes from the teacher-forced
+evaluation, where the CIF alphas and the token count are taken from the target
+(train_temporal_v126.py:668-688); free-running, that run scored
+pred_raw_top1=0.369 / pred_exact=0.074 against teacher_top1=0.901.
 
 ponytail: pure Pillow + numpy on purpose. The active interpreter has no
-matplotlib/h5py/torch, and scene 1 is procedural, so nothing here needs the
-dataset or a checkpoint.
+matplotlib/h5py/torch, so the keypoints are read from the committed
+docs/clip_keypoints.npz rather than from the HDF5 dataset.
 
     python scripts/docs/make_imitator_animation.py --out docs/imitator.gif
     python scripts/docs/make_imitator_animation.py --selftest
@@ -45,11 +44,13 @@ MUTED = (138, 151, 168)
 WHITE = (242, 245, 249)
 STROKE = (124, 138, 160)
 
-# Real prediction: clip 1403, gloss "Goma de mascar", predicted == target.
+# Real prediction for the same clip the keypoints come from: 1660, gloss
+# "Hambriento", predicted == target. Picked over the other exact-match rows
+# because both hands are cleanly detected in its keypoints.
 # outputs/v126_temporal/diag_imitator_A2_predlen_optunaStable_20260625_194336/predictions.jsonl
-TOKEN_IDS = [236759, 5537, 569, 129030]
-PRED_TEXT = "goma de mascar"
-GLOSS = "Goma de mascar"
+TOKEN_IDS = [236754, 1525, 604, 14246]
+PRED_TEXT = "hambriento"
+GLOSS = "Hambriento"
 
 FONT_DIR = Path("/usr/share/fonts/truetype/dejavu")
 
@@ -65,134 +66,60 @@ def font(size: int, mono: bool = False, bold: bool = False):
 
 
 # --- skeleton ---------------------------------------------------------------
-# Hand topology copied from src/mslm/dataloader/graph_keypoints.py
-# (HAND_TEMPLATE); imported by hand to avoid pulling in networkx.
-HAND_EDGES = [
-    (0, 1), (1, 2), (2, 3), (3, 4),
-    (0, 5), (5, 6), (6, 7), (7, 8),
-    (0, 9), (9, 10), (10, 11), (11, 12),
-    (0, 13), (13, 14), (14, 15), (15, 16),
-    (0, 17), (17, 18), (18, 19), (19, 20),
-    (5, 9), (9, 13), (13, 17),
-]
+# Real keypoints: docs/clip_keypoints.npz holds the 111 model-input keypoints of
+# clip 1660 ("Hambriento"), exported by scripts/docs/export_clip_keypoints.py.
+# Layout after remove_keypoints (data_augmentation.py:142-151):
+#   0-6 pose (OpenPose nose, neck, R shoulder/elbow/wrist, L shoulder/elbow)
+#   7-70 face (64)   71-90 left hand (20)   91-110 right hand (20)
+CLIP_NPZ = Path(__file__).resolve().parents[2] / "docs" / "clip_keypoints.npz"
 
-HAND_OPEN = np.array([
-    (0.00, 0.00),
-    (-0.22, -0.10), (-0.36, -0.28), (-0.46, -0.46), (-0.53, -0.63),
-    (-0.14, -0.36), (-0.18, -0.60), (-0.21, -0.77), (-0.22, -0.92),
-    (0.00, -0.39), (0.00, -0.64), (0.00, -0.83), (0.00, -0.99),
-    (0.14, -0.36), (0.18, -0.60), (0.21, -0.77), (0.22, -0.92),
-    (0.28, -0.28), (0.35, -0.46), (0.39, -0.60), (0.42, -0.71),
-])
+LH, RH = 71, 91
+POSE_EDGES = [(0, 1), (1, 2), (2, 3), (3, 4), (1, 5), (5, 6)]
+# The 20-point hand blocks are 5 fingers of 4 joints; the OpenPose hand root is
+# not part of the 111, so the fingers are tied together through the palm chain.
+HAND_EDGES = [(f * 4 + j, f * 4 + j + 1) for f in range(5) for j in range(3)]
+HAND_EDGES += [(f * 4, (f + 1) * 4) for f in range(4)]
+# The left wrist is not in the 111 either, so the left hand hangs off the elbow.
+ATTACH = [(6, LH), (4, RH)]
 
-HAND_CURL = np.array([
-    (0.00, 0.00),
-    (-0.22, -0.10), (-0.34, -0.24), (-0.40, -0.36), (-0.36, -0.46),
-    (-0.14, -0.36), (-0.16, -0.54), (-0.10, -0.62), (-0.03, -0.56),
-    (0.00, -0.39), (0.00, -0.58), (0.06, -0.66), (0.12, -0.58),
-    (0.14, -0.36), (0.17, -0.54), (0.22, -0.62), (0.27, -0.54),
-    (0.28, -0.28), (0.33, -0.42), (0.37, -0.49), (0.40, -0.42),
-])
+REGIONS = ((slice(0, 7), BLUE), (slice(7, 71), DIM_BLUE),
+           (slice(LH, LH + 20), GREEN), (slice(RH, RH + 20), PURPLE))
 
-# One signing cycle: (right elbow, right wrist, right angle/curl,
-#                     left elbow, left wrist, left angle/curl)
-KEYS = [
-    dict(re=(-0.24, 0.00), rw=(-0.23, 0.17), ra=-8, rc=0.2,
-         le=(0.24, 0.00), lw=(0.23, 0.17), la=8, lc=0.2),
-    dict(re=(-0.26, -0.03), rw=(-0.15, -0.12), ra=-22, rc=0.0,
-         le=(0.26, -0.03), lw=(0.15, -0.12), la=22, lc=0.0),
-    dict(re=(-0.25, 0.01), rw=(-0.07, -0.08), ra=-48, rc=0.85,
-         le=(0.25, 0.01), lw=(0.08, -0.19), la=26, lc=0.85),
-    dict(re=(-0.27, -0.01), rw=(-0.20, -0.19), ra=-6, rc=0.0,
-         le=(0.27, -0.01), lw=(0.17, -0.02), la=38, lc=0.45),
-]
-
-NECK = (0.0, -0.26)
-HEAD = (0.0, -0.40)
-HEAD_R = 0.135
-SH_L, SH_R = (-0.19, -0.24), (0.19, -0.24)
-HIP_L, HIP_R = (-0.14, 0.06), (0.14, 0.06)
+_CLIP = None
 
 
-def _ease(u: float) -> float:
-    return 0.5 - 0.5 * math.cos(math.pi * u)
+def clip() -> dict:
+    """Load the exported clip once: keypoints [T, 111, 2] in [0, 1], y down."""
+    global _CLIP
+    if _CLIP is None:
+        d = np.load(CLIP_NPZ)
+        _CLIP = {"kp": d["keypoints"].astype(np.float32),
+                 "gloss": str(d["gloss"]), "clip_id": str(d["clip_id"])}
+    return _CLIP
 
 
-def _lerp(a, b, u):
-    return tuple(a[i] + (b[i] - a[i]) * u for i in range(len(a)))
+def frame_points(t: float, cx: float, cy: float, scale: float) -> np.ndarray:
+    """Keypoints of the clip at position t in [0, 1], mapped to pixels."""
+    kp = clip()["kp"]
+    i = int(round(max(0.0, min(1.0, t)) * (len(kp) - 1)))
+    return (kp[i] - 0.5) * scale + np.array([cx, cy], dtype=np.float32)
 
 
-def pose(t: float) -> dict:
-    """Interpolated signing pose at cycle position t in [0, 1)."""
-    n = len(KEYS)
-    f = (t % 1.0) * n
-    i, u = int(f) % n, _ease(f - int(f))
-    a, b = KEYS[i], KEYS[(i + 1) % n]
-    out = {}
-    for k in ("re", "rw", "le", "lw"):
-        out[k] = _lerp(a[k], b[k], u)
-    for k in ("ra", "rc", "la", "lc"):
-        out[k] = a[k] + (b[k] - a[k]) * u
+def bone_segments(pts: np.ndarray, max_len: float = 1e9):
+    """Bones for one frame, skipping implausibly long ones.
+
+    Every one of the 111 points is still drawn; the length guard only hides
+    bones to mis-detected joints (some clips have a noisy non-dominant hand),
+    which would otherwise draw lines across the whole panel.
+    """
+    edges = list(POSE_EDGES) + ATTACH
+    edges += [(LH + a, LH + b) for a, b in HAND_EDGES]
+    edges += [(RH + a, RH + b) for a, b in HAND_EDGES]
+    out = []
+    for a, b in edges:
+        if np.hypot(*(pts[a] - pts[b])) <= max_len:
+            out.append([tuple(pts[a]), tuple(pts[b])])
     return out
-
-
-def hand_points(wrist, angle_deg: float, curl: float, size: float) -> np.ndarray:
-    pts = HAND_OPEN + (HAND_CURL - HAND_OPEN) * curl
-    r = math.radians(angle_deg)
-    rot = np.array([[math.cos(r), -math.sin(r)], [math.sin(r), math.cos(r)]])
-    return pts @ rot.T * size + np.asarray(wrist)
-
-
-def face_curves(center, r):
-    cx, cy = center
-    def arc(pts):
-        return [(cx + x * r, cy + y * r) for x, y in pts]
-    return [
-        arc([(-0.62, -0.30), (-0.42, -0.42), (-0.18, -0.36)]),          # brow R
-        arc([(0.18, -0.36), (0.42, -0.42), (0.62, -0.30)]),             # brow L
-        arc([(-0.60, -0.08), (-0.42, -0.22), (-0.20, -0.08),
-             (-0.42, 0.02), (-0.60, -0.08)]),                           # eye R
-        arc([(0.20, -0.08), (0.42, -0.22), (0.60, -0.08),
-             (0.42, 0.02), (0.20, -0.08)]),                             # eye L
-        arc([(-0.34, 0.42), (-0.14, 0.32), (0.0, 0.38), (0.14, 0.32),
-             (0.34, 0.42), (0.14, 0.56), (0.0, 0.58), (-0.14, 0.56),
-             (-0.34, 0.42)]),                                           # lips
-    ]
-
-
-def skeleton(t: float, cx: float, cy: float, scale: float):
-    """Return (bone segments, keypoints) in pixel space for cycle position t."""
-    p = pose(t)
-
-    def P(u):
-        return (cx + u[0] * scale, cy + u[1] * scale)
-
-    pelvis = ((HIP_L[0] + HIP_R[0]) / 2, (HIP_L[1] + HIP_R[1]) / 2)
-    bones = [
-        [P(NECK), P(HEAD)],
-        [P(SH_L), P(SH_R)],
-        [P(NECK), P(pelvis)],
-        [P(HIP_L), P(HIP_R)],
-        [P(SH_L), P(p["re"]), P(p["rw"])],
-        [P(SH_R), P(p["le"]), P(p["lw"])],
-    ]
-    kps = [P(NECK), P(SH_L), P(SH_R), P(HIP_L), P(HIP_R), P(p["re"]), P(p["le"])]
-
-    hsize = 0.125 * scale
-    for wrist, ang, curl in ((p["rw"], p["ra"], p["rc"]), (p["lw"], p["la"], p["lc"])):
-        hp = hand_points(P(wrist), ang, curl, hsize)
-        bones.extend([[tuple(hp[a]), tuple(hp[b])] for a, b in HAND_EDGES])
-        kps.extend(tuple(q) for q in hp)
-
-    head_c = P(HEAD)
-    head_r = HEAD_R * scale
-    face = face_curves(head_c, head_r)
-    for c in face:
-        bones.append(c)
-        kps.extend(c[::2])
-    bones.append([(head_c[0] + math.cos(a) * head_r, head_c[1] + math.sin(a) * head_r)
-                  for a in np.linspace(0, 2 * math.pi, 33)])
-    return bones, kps
 
 
 # --- drawing helpers --------------------------------------------------------
@@ -275,29 +202,31 @@ def breadcrumb(d, idx: int, p: float):
 
 def scene_capture(p: float):
     img, d = new_frame()
-    t = p * 1.6
+    c = clip()
     text(d, (W / 2, 26), "From video to keypoints", FT.title, WHITE, anchor="ma")
 
-    # left: "video" frame with the signer
+    # left: the clip itself, as a skeleton
     box(d, (70, 60, 360, 350))
-    text(d, (78, 44), "input clip", FT.small, MUTED)
-    bones, kps = skeleton(t, 215, 235, 250)
+    text(d, (78, 44), f"clip {c['clip_id']} · “{c['gloss']}”",
+         FT.small, MUTED)
+    pts = frame_points(p, 218, 205, 250)
 
     fade = min(1.0, max(0.0, (p - 0.35) / 0.3))   # bones dissolve, dots remain
-    for b in bones:
+    for b in bone_segments(pts):
         line(d, b, BLUE, 1.6, 0.85 * (1 - 0.75 * fade))
-    for k in kps:
-        dot(d, k, 1.5 + 0.9 * fade, BLUE, 0.35 + 0.65 * fade)
+    for q in pts:
+        dot(d, q, 1.4 + 0.8 * fade, BLUE, 0.35 + 0.6 * fade)
 
     line(d, [(378, 205), (438, 205)], STROKE, 1.5)
     line(d, [(430, 200), (438, 205), (430, 210)], STROKE, 1.5)
 
-    # right: the extracted tensor
+    # right: the same frame, coloured by the region each keypoint belongs to
     box(d, (455, 60, 890, 350))
     text(d, (463, 44), "pose estimation", FT.small, MUTED)
-    bones2, kps2 = skeleton(t, 580, 235, 250)
-    for k in kps2:
-        dot(d, k, 1.7, BLUE, 0.9)
+    pts2 = frame_points(p, 598, 205, 250)
+    for sl, col in REGIONS:
+        for q in pts2[sl]:
+            dot(d, q, 1.7, col, 0.9)
 
     rows = [
         ("pose", 7, BLUE),
@@ -517,11 +446,12 @@ def write_gif(frames, out: Path, fps: int, colors: int):
 
 
 def selftest():
-    for t in (0.0, 0.3, 0.77):
-        _, kps = skeleton(t, 200, 200, 300)
-        arr = np.asarray(kps, dtype=float)
-        assert np.isfinite(arr).all(), f"non-finite keypoints at t={t}"
-        assert len(kps) > 60, f"too few keypoints: {len(kps)}"
+    assert clip()["kp"].shape[1:] == (111, 2), clip()["kp"].shape
+    for t in (0.0, 0.3, 1.0):
+        pts = frame_points(t, 200, 200, 300)
+        assert pts.shape == (111, 2) and np.isfinite(pts).all(), f"bad frame t={t}"
+        assert len(bone_segments(pts)) == len(POSE_EDGES) + 2 + 2 * len(HAND_EDGES)
+        assert 0 < len(bone_segments(pts, max_len=0.22 * 300)) < len(bone_segments(pts))
     for fn in (scene_capture, scene_pipeline, scene_output):
         img = fn(0.6).resize((W, H), Image.LANCZOS)
         assert img.size == (W, H)
