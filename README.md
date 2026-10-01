@@ -14,7 +14,9 @@ Research code for a staged sign-language video-to-text approach. The current Imi
 
 **Output.** Taking the argmax over the vocabulary gives one token ID per query, which the Gemma tokenizer decodes into text. A separate, optional pass with a frozen Gemma can correct punctuation and formatting; it is not part of the Imitator forward pass.
 
-The diagram illustrates the design in `src/mslm/models/imitator.py`; current runs go through the v126 temporal trainer (`scripts/train/train_temporal_v126.py`), which wraps that design in single-clip, teacher-forced mode. The skeleton motion, graph pulses, and attention weights in the animation are synthetic, but the token IDs and the transcription are a real prediction. Regenerate the GIF with `python scripts/docs/make_imitator_animation.py`.
+The diagram illustrates the design in `src/mslm/models/imitator.py`; current runs go through the v126 temporal trainer (`scripts/train/train_temporal_v126.py`), which wraps that design in single-clip, teacher-forced mode.
+
+The animation is a drawing of the architecture, not a recorded inference. The skeleton, the graph pulses, and the attention weights are procedural, and the keypoints shown are not the clip that produced the transcription. The token IDs and the text in the last scene are a real checkpoint output, but from the teacher-forced evaluation, where the CIF segmentation and the token count are taken from the target; free-running, that run reached 0.369 token top-1 and 7.4% exact sequence match. Regenerate the GIF with `python scripts/docs/make_imitator_animation.py`.
 
 ## Repository layout
 

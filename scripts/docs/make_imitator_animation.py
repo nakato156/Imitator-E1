@@ -4,9 +4,13 @@
 Three scenes: keypoint capture -> internal processing -> decoded output.
 
 The figure illustrates the design in src/mslm/models/imitator.py. The skeleton
-motion, the graph pulses and the attention weights are synthetic; the token IDs
-and the transcription in the final scene are real, copied from a prediction run
-(see TOKEN_IDS below).
+motion, the graph pulses and the attention weights are drawn, not recorded: the
+keypoints in scene 1 are procedural and are not the clip that produced the
+transcription. The token IDs and the text in scene 3 are a real checkpoint
+output, but from the teacher-forced evaluation, where the CIF alphas and the
+token count come from the target (train_temporal_v126.py:668-688). Free-running,
+that run scored pred_raw_top1=0.369 / pred_exact=0.074 against
+teacher_top1=0.901.
 
 ponytail: pure Pillow + numpy on purpose. The active interpreter has no
 matplotlib/h5py/torch, and scene 1 is procedural, so nothing here needs the
@@ -462,8 +466,8 @@ def scene_output(p: float):
     text(d, (699, 118), PRED_TEXT, FT.big, WHITE, a, anchor="ma")
     text(d, (699, 168), f"reference gloss: {GLOSS}", FT.small, MUTED, a,
          anchor="ma")
-    text(d, (699, 192), "real output, clip 1403", FT.small, GREEN, a * 0.9,
-         anchor="ma")
+    text(d, (699, 192), "real checkpoint output · teacher-forced length",
+         FT.small, GREEN, a * 0.9, anchor="ma")
 
     a = min(1.0, max(0.0, (p - 0.68) / 0.18))
     box(d, (240, 272, 720, 348), STROKE, a * 0.6)
