@@ -11,6 +11,7 @@ authors = [
   { name = "Giorgio Mancusi" },
   { name = "Rody Vilchez" },
 ]
+license = { text = "CC-BY-4.0" }
 requires-python = ">=3.11.11"
 dependencies = [
   "torch",
