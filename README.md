@@ -1,5 +1,9 @@
 # Multimodal Sign Language Model
 
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+
 Research code for a staged sign-language video-to-text approach. The current Imitator prototype maps keypoint sequences to Gemma token IDs; an optional Gemma stage can correct and format the generated text. This is an experimental research system, not a production translation service.
 
 ## How the Imitator works
@@ -49,6 +53,14 @@ python -m pip install -e .
 ```
 
 `pyproject.toml` declares the package dependencies. `requirements.txt` lists a broader environment used by additional training and analysis scripts; PyTorch and CUDA package versions may need to match your hardware.
+
+## Visual Demo (No Dataset Required)
+
+The repository bundles sample keypoints for clip 1660 (`docs/clip_keypoints.npz`). You can regenerate the animated pipeline explainer GIF locally without needing the full dataset:
+
+```bash
+python scripts/docs/make_imitator_animation.py
+```
 
 ## Running experiments
 
