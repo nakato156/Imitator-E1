@@ -84,6 +84,19 @@ Install `pytest` in the active environment and run the suite from the repository
 python -m pytest tests/
 ```
 
+## Citation
+
+If you use this codebase or model artifacts in your research, please cite:
+
+```bibtex
+@software{imitator2026,
+  author = {Velasquez, Christian and Mancusi, Giorgio and Vilchez, Rody},
+  title = {Imitator: Multimodal Sign Language Model},
+  year = {2026},
+  url = {https://github.com/nakato156/Imitator-E1}
+}
+```
+
 ## License
 
 Copyright (c) 2026 Christian Velasquez, Giorgio Mancusi, and Rody Vilchez.
