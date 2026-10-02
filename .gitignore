@@ -1,12 +1,35 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*$py.class
+
+# Environments and caches
+.venv/
+venv/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.venv/
-venv/
+.coverage
+htmlcov/
+.hf_cache/
+
+# Environment variables
 .env
 .env.*
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data, checkpoints, and logs
 /data/
 /outputs/
 /logs/
@@ -14,4 +37,3 @@ venv/
 *.pt
 *.pth
 *.safetensors
-.hf_cache/
