@@ -27,11 +27,19 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "poethepoet>=0.24.1"
+  "poethepoet>=0.24.1",
+  "pytest>=8.0.0",
 ]
 
 [tool.poe.tasks]
-# Definimos cada tarea con su propio bloque para pasar PYTHONPATH
+[tool.poe.tasks.test]
+cmd = "pytest tests/"
+env = { PYTHONPATH = "." }
+
+[tool.poe.tasks.animate]
+cmd = "python scripts/docs/make_imitator_animation.py"
+env = { PYTHONPATH = "." }
+
 [tool.poe.tasks.train]
 cmd = "python scripts/train/train.py --epochs 100 --batch_size 64 --batch_sample 4"
 env = { PYTHONPATH = "." }
