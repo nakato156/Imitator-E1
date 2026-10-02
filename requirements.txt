@@ -19,3 +19,4 @@ accelerate
 transformers
 sacrebleu
 opencv-python-headless
+pillow

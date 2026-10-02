@@ -28,6 +28,7 @@ dependencies = [
   "protobuf",
   "transformers",
   "opencv-python-headless",
+  "pillow",
 ]
 
 [project.optional-dependencies]
@@ -39,13 +40,22 @@ gpu = [
   "unsloth",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v"
+
 [tool.poe.tasks]
 [tool.poe.tasks.test]
-cmd = "pytest tests/"
+cmd = "pytest"
 env = { PYTHONPATH = "." }
 
 [tool.poe.tasks.animate]
 cmd = "python scripts/docs/make_imitator_animation.py"
+env = { PYTHONPATH = "." }
+
+[tool.poe.tasks.selftest]
+cmd = "python scripts/docs/make_imitator_animation.py --selftest"
 env = { PYTHONPATH = "." }
 
 [tool.poe.tasks.train]

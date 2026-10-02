@@ -50,16 +50,18 @@ From the repository root:
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e .
+python -m pip install -e ".[dev]"
 ```
 
-`pyproject.toml` declares the package dependencies. `requirements.txt` lists a broader environment used by additional training and analysis scripts; PyTorch and CUDA package versions may need to match your hardware.
+`pyproject.toml` declares package dependencies. For GPU-accelerated training with Unsloth, install with `pip install -e ".[dev,gpu]"`.
 
 ## Visual Demo (No Dataset Required)
 
 The repository bundles sample keypoints for clip 1660 (`docs/clip_keypoints.npz`). You can regenerate the animated pipeline explainer GIF locally without needing the full dataset:
 
 ```bash
+poe animate
+# or directly:
 python scripts/docs/make_imitator_animation.py
 ```
 
@@ -91,10 +93,12 @@ The Imitator entrypoint wraps the temporal trainer in single-clip, teacher-force
 
 ## Tests
 
-Install `pytest` in the active environment and run the suite from the repository root:
+Run the test suite using Poe or pytest directly from the repository root:
 
 ```bash
-python -m pytest tests/
+poe test
+# or:
+pytest
 ```
 
 ## Citation
