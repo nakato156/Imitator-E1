@@ -1,6 +1,9 @@
 poethepoet
+pytest
 torch
 torchvision
+torchtune
+torchao<0.8.0
 numpy
 openmim
 tensorboard
@@ -15,3 +18,4 @@ onnxscript
 accelerate
 transformers
 sacrebleu
+opencv-python-headless

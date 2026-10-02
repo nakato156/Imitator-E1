@@ -15,20 +15,28 @@ license = { text = "CC-BY-4.0" }
 requires-python = ">=3.11.11"
 dependencies = [
   "torch",
+  "torchtune",
+  "torchao<0.8.0",
   "numpy",
   "tqdm",
   "optuna",
   "pandas",
-  "unsloth",
   "h5py",
   "nvtx",
   "sacrebleu",
+  "grpcio",
+  "protobuf",
+  "transformers",
+  "opencv-python-headless",
 ]
 
 [project.optional-dependencies]
 dev = [
   "poethepoet>=0.24.1",
   "pytest>=8.0.0",
+]
+gpu = [
+  "unsloth",
 ]
 
 [tool.poe.tasks]
