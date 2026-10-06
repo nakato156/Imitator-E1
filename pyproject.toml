@@ -26,7 +26,8 @@ dependencies = [
   "sacrebleu",
   "grpcio",
   "protobuf",
-  "transformers",
+  "transformers>=4.43.0",
+  "tokenizers>=0.19.0",
   "opencv-python-headless",
   "pillow",
 ]
